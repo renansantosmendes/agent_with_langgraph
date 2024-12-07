@@ -2,12 +2,13 @@ wikipedia
 mlflow==2.14.1
 pdfplumber
 pypdf
-langchain
-langchain-community
+langchain==0.3.10
+langchain-community==0.3.10
 openai
 langchain-openai
 langchainhub
 langgraph~=0.1.14
 python-dotenv~=1.0.1
-pydantic~=2.8.2
+pydantic~=2.10.2
 tavily-python
+faiss-cpu

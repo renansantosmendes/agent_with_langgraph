@@ -10,7 +10,7 @@ class AgentState(TypedDict):
     messages: Annotated[list[AnyMessage], operator.add]
 
 
-class Agent:
+class Agent(object):
     def __init__(self, model, tools) -> None:
         """
         Initializes the Agent object with the provided model and tools.
