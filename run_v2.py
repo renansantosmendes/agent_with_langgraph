@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-model = ChatOpenAI(model="gpt-4o-min")
+model = ChatOpenAI(model="gpt-4o-mini")
 search_engine = TavilySearchResults(max_results=4)
 retriever_engine = WebContentVectorRetriever(url='https://docs.smith.langchain.com/overview')
 
@@ -15,4 +15,4 @@ if __name__ == '__main__':
     agent = Agent(search_engine=search_engine,
                   retriever_engine=retriever_engine.get_retriever(),
                   model=model)
-    agent.invoke("qual a previsão do tempo para belo horizonte?")
+    print(agent.invoke("qual a previsão do tempo para belo horizonte?"))

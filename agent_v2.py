@@ -27,4 +27,4 @@ class Agent:
         return self.llm(query)
 
     def invoke(self, query):
-        pass
+        return self.llm.invoke(query)
