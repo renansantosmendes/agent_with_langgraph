@@ -5,16 +5,20 @@ from typing import Literal
 from typing_extensions import TypedDict
 
 from langchain_openai import ChatOpenAI
-from langgraph.graph import MessagesState
+from langgraph.graph import MessagesState, add_messages
 from langgraph.types import Command
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_core.tools import tool
 from langchain_experimental.utilities import PythonREPL
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, AIMessage, AnyMessage
 from langgraph.graph import StateGraph, START, END
 from langgraph.prebuilt import create_react_agent
 
 load_dotenv()
+
+
+class AgentState(TypedDict):
+    messages: Annotated[list[AnyMessage], add_messages]
 
 
 def multi_agent_run():
@@ -71,34 +75,36 @@ def multi_agent_run():
         state_modifier="Você é um pesquisador, não execute nenhum cálculo matemático."
     )
 
+    code_agent = create_react_agent(llm, tools=[python_repl_tool],
+                                    state_modifier="Você é um programador, que cria e executa códigos em Python.")
+
     def research_node(state: MessagesState) -> Command[Literal["supervisor"]]:
         result = research_agent.invoke(state)
         return Command(
             update={
                 "messages": [
-                    HumanMessage(content=result["messages"][-1].content,
-                                 name="researcher")
+                    AIMessage(content=result["messages"][-1].content,
+                              name="researcher")
                 ]
             },
             goto="supervisor",
         )
 
-    code_agent = create_react_agent(llm, tools=[python_repl_tool],
-                                    state_modifier="Você é um programador, que cria e executa códigos em Python.")
+
 
     def code_node(state: MessagesState) -> Command[Literal["supervisor"]]:
         result = code_agent.invoke(state)
         return Command(
             update={
                 "messages": [
-                    HumanMessage(content=result["messages"][-1].content,
-                                 name="coder")
+                    AIMessage(content=result["messages"][-1].content,
+                              name="coder")
                 ]
             },
             goto="supervisor",
         )
 
-    workflow = StateGraph(MessagesState)
+    workflow = StateGraph(AgentState)
     workflow.add_edge(START, "supervisor")
     workflow.add_node("supervisor", supervisor_node)
     workflow.add_node("researcher", research_node)
@@ -109,7 +115,7 @@ def multi_agent_run():
         {"messages": [("user", "qual a raíz quadrada de 42?")]}, subgraphs=True
     ):
         print(s)
-        print("----")
+        print("-"*40)
 
 
 if __name__ == "__main__":
