@@ -29,7 +29,7 @@ class BaseAgent(ABC):
     agent_name: str
     tools: Optional[list] = None
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         """
         Initializes the agent and sets up the language model with tools if available.
 
