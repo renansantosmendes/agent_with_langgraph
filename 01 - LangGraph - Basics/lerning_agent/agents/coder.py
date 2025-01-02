@@ -17,14 +17,14 @@ load_dotenv()
 @tool
 def python_repl_tool(
         code: Annotated[str, "The python code to execute."]
-) -> str:
+) -> tuple[str, str]:
     """Use this to execute Python code. If you want to see the output of a value,
     you should print it out with `print(...)`. This is visible to the user."""
     try:
-        PythonREPL().run(code)
+        response = PythonREPL().run(code)
     except BaseException as e:
-        return f"Failed to execute. Error: {repr(e)}"
-    return "Successfully executed"
+        return f"Failed to execute. Error: {repr(e)}", ""
+    return "Successfully executed", response
 
 
 class CoderAgent(BaseAgent):
@@ -39,10 +39,23 @@ class CoderAgent(BaseAgent):
         self.llm_model = kwargs.get('llm_model', ChatOpenAI(model="gpt-4o-mini"))
         self.tools = [python_repl_tool]
         self._initialize_model_with_tools()
+        self._create_tools_by_name()
 
     def call_llm(self, **kwargs) -> BaseMessage:
         chain = self.prompt | self.llm_model_with_tools
-        return chain.invoke(kwargs)
+        response = chain.invoke(kwargs)
+        full_responses = []
+        if response.tool_calls:
+            full_responses.append(response)
+            for tool_call in response.tool_calls:
+                tool_name = tool_call['name']
+                tool_args = tool_call['args']
+                tool_result, tool_message = self.tools_by_name[tool_name].invoke(tool_args)
+                full_responses.append(tool_result)
+        return response
+
+    def _create_tools_by_name(self):
+        self.tools_by_name = {tool.name: tool for tool in self.tools}
 
 
 if __name__ == "__main__":
