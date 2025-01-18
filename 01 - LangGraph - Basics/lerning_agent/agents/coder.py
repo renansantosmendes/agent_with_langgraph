@@ -36,7 +36,7 @@ class CoderAgent(BaseAgent):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.llm_model = kwargs.get('llm_model', ChatOpenAI(model="gpt-4o-mini"))
+        self.llm_model = kwargs.get('llm_model', ChatOpenAI(model_name="gpt-4o-mini"))
         self.tools = [python_repl_tool]
         self._initialize_model_with_tools()
         self._create_tools_by_name()
@@ -59,7 +59,7 @@ class CoderAgent(BaseAgent):
 
 
 if __name__ == "__main__":
-    coder = CoderAgent(llm_model=ChatOpenAI(model="gpt-4o-mini"),
+    coder = CoderAgent(llm_model=ChatOpenAI(model_name="gpt-4o-mini"),
                        agent_name="coder")
     result = coder.call_llm(code=[HumanMessage(content="print('Hello, World!')")])
     print(result)
