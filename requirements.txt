@@ -14,3 +14,10 @@ tavily-python
 faiss-cpu
 langchain-anthropic
 langchain-experimental
+rank_bm25
+rank-llm==0.12.8
+chromadb
+langchain_cohere
+PyYAML==6.0.2
+docling
+langchain_text_splitters
