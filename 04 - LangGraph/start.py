@@ -54,12 +54,8 @@ def main():
     config = {"configurable": {"thread_id": "1"}}
 
     def stream_graph_updates(user_input: str):
-        # for event in graph.stream({"messages": [{"role": "user", "content": user_input}]},
-        #                           config, stream_mode="values"):
-        #     for value in event.values():
-        #         print("Assistant:", value["messages"][-1].pretty_print())
         config = {"configurable": {"thread_id": "1"}}
-        input_message = {"type": "user", "content": "hi! I'm bob"}
+        input_message = {"type": "user", "content": user_input}
         for chunk in graph.stream({"messages": [input_message]}, config, stream_mode="values"):
             chunk["messages"][-1].pretty_print()
 
@@ -72,7 +68,6 @@ def main():
 
             stream_graph_updates(user_input)
         except:
-            # fallback if input() is not available
             user_input = "What do you know about LangGraph?"
             print("User: " + user_input)
             stream_graph_updates(user_input)
@@ -80,4 +75,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    print('Hello World!')
