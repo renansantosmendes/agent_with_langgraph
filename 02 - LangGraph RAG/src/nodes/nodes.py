@@ -1,3 +1,37 @@
+from typing import Literal, TypedDict, Any
+
+from langchain_core.messages import BaseMessage
+from langchain_core.runnables import RunnableConfig
+from langchain_openai import ChatOpenAI
+
+from agent import AgentState
+from states.states import Router
+
+import logging
+from dotenv import load_dotenv
+from ..utils.utils import config
+from ..utils.prompts import ROUTER_SYSTEM_PROMPT, RESEARCH_PLAN_SYSTEM_PROMPT, MORE_INFO_SYSTEM_PROMPT, GENERAL_SYSTEM_PROMPT
+
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+logging.getLogger("openai").setLevel(logging.WARNING)
+logging.getLogger("urllib3").setLevel(logging.WARNING)
+
+logging.getLogger("openai").propagate = False
+logging.getLogger("urllib3").propagate = False
+logging.getLogger("httpx").propagate = False
+
+
+GPT_4o_MINI = config["llm"]["gpt_4o_mini"]
+GPT_4o = config["llm"]["gpt_4o"]
+TEMPERATURE = config["llm"]["temperature"]
+
+load_dotenv()
+
+logger = logging.getLogger(__name__)
+
 async def analyze_and_route_query(
     state: AgentState, *, config: RunnableConfig
 ) -> dict[str, Router]:
