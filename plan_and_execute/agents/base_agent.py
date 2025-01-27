@@ -36,7 +36,7 @@ class Agent(BaseModel):
         ]) | self._get_llm()
 
     def create_custom_react_agent(self):
-        return ChatPromptTemplate.from_messages(self.agent_prompt) | create_react_agent(
+        return create_react_agent(
             model=self._get_llm(),
             tools=self.config.tools if self.config.tools else [],
             state_modifier=self.agent_prompt
