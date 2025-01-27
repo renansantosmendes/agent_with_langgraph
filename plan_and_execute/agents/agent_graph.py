@@ -19,7 +19,7 @@ class  AgentGraph(StateGraph):
         executor_config = AgentConfig(agent_name='executor',
                                       tools=executor_tools)
         self.executor = Agent(config=executor_config,
-                              agent_prompt=EXECUTOR_PROMPT).create_agent()
+                              agent_prompt=EXECUTOR_PROMPT).create_custom_react_agent()
         planner_config = AgentConfig(agent_name='planner',
                                      structured_output=Plan)
         self.planner = Agent(config=planner_config,
@@ -30,13 +30,13 @@ class  AgentGraph(StateGraph):
                                agent_prompt=REPLANNER_PROMPT).create_agent()
         self._workflow_compiled = None
 
-    async def execute(self, state: PlanExecute) -> Command[Literal["replan"]]:
+    def execute(self, state: PlanExecute) -> Command[Literal["replan"]]:
         plan = state['plan']
         plan_str = '\n'.join(f"{i + 1}.{step}" for i, step in enumerate(plan))
         task = plan[0]
         task_formatted = f"""para o dado plano:
         {plan_str}\n\nVocê está encarregado de executar a etapa {1}, {task}."""
-        agent_response = await self.executor.ainvoke(
+        agent_response = self.executor.invoke(
             {
                 "messages": [("user", task_formatted)]
             }
@@ -45,14 +45,14 @@ class  AgentGraph(StateGraph):
             "past_steps": [(task, agent_response['messages'][-1].content)],
         }, goto="replan")
 
-    async def plan(self, state: PlanExecute) -> Command[Literal["agent"]]:
-        plan = await self.planner.ainvoke({"messages": [("user", state['input_message'])]})
+    def plan(self, state: PlanExecute) -> Command[Literal["agent"]]:
+        plan = self.planner.invoke({"messages": [("user", state['input_message'])]})
         return Command(update={
             "plan": plan.steps
         }, goto="agent")
 
-    async def replan(self, state: PlanExecute) -> Command[Literal["agent", "END"]]:
-        output = await self.replanner.ainvoke(state)
+    def replan(self, state: PlanExecute) -> Command[Literal["agent", "END"]]:
+        output =  self.replanner.invoke(state)
         if isinstance(output.action, Response):
             return Command(update={
                 "response": output.action.response

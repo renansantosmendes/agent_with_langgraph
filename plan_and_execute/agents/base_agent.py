@@ -29,10 +29,15 @@ class Agent(BaseModel):
                           temperature=self.config.temperature)
 
     def create_agent(self):
-        return ChatPromptTemplate.from_template(self.agent_prompt) | create_react_agent(
+        return ChatPromptTemplate.from_messages(
+            [
+                ("system", self.agent_prompt),
+                ("placeholder", "{messages}")
+        ]) | self._get_llm()
+
+    def create_custom_react_agent(self):
+        return ChatPromptTemplate.from_messages(self.agent_prompt) | create_react_agent(
             model=self._get_llm(),
             tools=self.config.tools if self.config.tools else [],
             state_modifier=self.agent_prompt
         )
-
-
