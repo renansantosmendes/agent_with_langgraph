@@ -12,8 +12,24 @@ from agents.models import Act, Response
 from entities.plans import PlanExecute, Plan
 
 
-class  AgentGraph(StateGraph):
+class AgentGraph(StateGraph):
+    """
+    A state graph representing the planning and execution of tasks by agents.
+
+    This class orchestrates a workflow involving a planner, an executor, and a replanner
+    to process and execute tasks based on input messages and plans.
+
+    Attributes:
+        executor (Agent): The agent responsible for executing individual steps of the plan.
+        planner (Agent): The agent responsible for creating a plan from an input message.
+        replanner (Agent): The agent responsible for replanning if adjustments are needed.
+        _workflow_compiled (Optional[Callable]): The compiled workflow for execution.
+    """
+
     def __init__(self):
+        """
+        Initializes the `AgentGraph` with pre-configured planner, executor, and replanner agents.
+        """
         super().__init__(PlanExecute)
         executor_tools = [TavilySearchResults(max_results=3)]
         executor_config = AgentConfig(agent_name='executor',
@@ -31,11 +47,20 @@ class  AgentGraph(StateGraph):
         self._workflow_compiled = None
 
     def execute(self, state: PlanExecute) -> Command[Literal["replan"]]:
+        """
+        Executes the first step of the plan.
+
+        Args:
+            state (PlanExecute): The current state containing the plan and execution details.
+
+        Returns:
+            Command[Literal["replan"]]: A command updating the past steps and transitioning to replanning.
+        """
         plan = state['plan']
         plan_str = '\n'.join(f"{i + 1}.{step}" for i, step in enumerate(plan))
         task = plan[0]
-        task_formatted = f"""para o dado plano:
-        {plan_str}\n\nVocê está encarregado de executar a etapa {1}, {task}."""
+        task_formatted = f"""For the given plan:
+        {plan_str}\n\nYou are responsible for executing step {1}, {task}."""
         agent_response = self.executor.invoke(
             {
                 "messages": [("user", task_formatted)]
@@ -46,13 +71,32 @@ class  AgentGraph(StateGraph):
         }, goto="replan")
 
     def plan(self, state: PlanExecute) -> Command[Literal["agent"]]:
+        """
+        Generates a plan based on the input message.
+
+        Args:
+            state (PlanExecute): The current state containing the input message.
+
+        Returns:
+            Command[Literal["agent"]]: A command updating the state with the plan and transitioning to execution.
+        """
         plan = self.planner.invoke({"messages": [("user", state['input_message'])]})
         return Command(update={
             "plan": plan.steps
         }, goto="agent")
 
     def replan(self, state: PlanExecute) -> Command[Literal["agent", "END"]]:
-        output =  self.replanner.invoke(state)
+        """
+        Handles replanning or generates a final response.
+
+        Args:
+            state (PlanExecute): The current state containing the execution history and plan.
+
+        Returns:
+            Command[Literal["agent", "END"]]: A command updating the state with a new plan or final response,
+            and transitioning to execution or ending the process.
+        """
+        output = self.replanner.invoke(state)
         if isinstance(output.action, Response):
             return Command(update={
                 "response": output.action.response
@@ -63,6 +107,11 @@ class  AgentGraph(StateGraph):
             }, goto="agent")
 
     def _build_workflow(self) -> None:
+        """
+        Builds the workflow for the state graph.
+
+        Adds nodes and transitions for planner, executor, and replanner states, then compiles the workflow.
+        """
         workflow = StateGraph(PlanExecute)
         workflow.add_node("planner", self.plan)
         workflow.add_node("agent", self.execute)
@@ -71,12 +120,24 @@ class  AgentGraph(StateGraph):
         self._workflow_compiled = workflow.compile()
 
     def build(self):
+        """
+        Builds and returns the compiled workflow.
+
+        Returns:
+            Callable: The compiled workflow for execution.
+        """
         self._build_workflow()
         return self._workflow_compiled
 
     def save_image(self) -> None:
+        """
+        Saves a visual representation of the workflow as a PNG image.
+
+        The workflow graph is rendered using Mermaid and saved to a file named 'plan_and_execute.png'.
+        """
         img = Image(
-            self._workflow_compiled .get_graph(xray=True).draw_mermaid_png()
+            self._workflow_compiled.get_graph(xray=True).draw_mermaid_png()
         )
         with open('plan_and_execute.png', 'wb') as f:
             f.write(img.data)
+
