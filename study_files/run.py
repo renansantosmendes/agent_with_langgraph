@@ -1,4 +1,4 @@
-from utils import graph
+from study_files.utils import graph
 
 if __name__ == '__main__':
     while True:

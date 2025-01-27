@@ -4,7 +4,7 @@ from langchain_core.messages import BaseMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_openai import ChatOpenAI
 
-from agent import AgentState
+from study_files.agent import AgentState
 from states.states import Router
 
 import logging
