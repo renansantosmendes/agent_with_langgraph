@@ -1,3 +1,4 @@
+import os
 import re
 import ast
 import logging
@@ -10,6 +11,8 @@ from youtube_transcript_api import YouTubeTranscriptApi
 from entities.prompts import SUMMARIZER_PROMPT, META_SUMMARIZER_PROMPT
 
 from langchain_openai.chat_models import ChatOpenAI
+
+from utilities.mongo_service import MongoDBClient
 
 load_dotenv()
 
@@ -25,6 +28,11 @@ logger = logging.getLogger(__name__)
 class VideoSummarizer:
     def __init__(self, query: str=None) -> None:
         self.query = query
+        self.mongo_client = MongoDBClient(
+            os.environ.get('MONGO_URI'),
+            os.environ.get('MONGO_DATABASE'),
+            os.environ.get('MONGO_COLLECTION')
+        )
 
     @staticmethod
     def _get_summarizer_chain(prompt=SUMMARIZER_PROMPT) -> Runnable:
@@ -55,6 +63,9 @@ class VideoSummarizer:
             summaries = '\n\n####### Resumo ####### \n'.join(summaries_list)
             summary = self._get_summarizer_chain(META_SUMMARIZER_PROMPT).invoke({
                 "summaries": summaries
+            })
+            self.mongo_client.insert_document({
+                "summary": summary.content
             })
             return summary.content
 
