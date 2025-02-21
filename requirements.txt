@@ -28,3 +28,5 @@ rank-bm25~=0.2.2
 youtube-search==2.1.2
 youtube-transcript-api==0.6.3
 pymongo==4.11.1
+chromadb==0.6.3
+chromadb-client==0.6.3
