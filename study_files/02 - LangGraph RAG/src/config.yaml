@@ -1,0 +1,16 @@
+retriever:
+  file: "source_data\google-2024-environmental-report.pdf"
+  headers_to_split_on:
+    - ["#", "Header 1"]
+    - ["##", "Header 2"]
+  load_documents: False
+  collection_name: rag-chroma-google
+  directory: vector_db
+  top_k: 3
+  top_k_compression: 3
+  ensemble_weights: [0.3, 0.3, 0.4]
+  cohere_rerank_model: rerank-english-v3.0
+llm:
+  gpt_4o_mini: gpt-4o-mini-2024-07-18
+  gpt_4o: gpt-4o-2024-08-06
+  temperature: 0
